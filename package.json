@@ -1,0 +1,16 @@
+{
+	"scripts": {
+		"start": "node index.js"
+	},
+	"dependencies": {
+		"ansicolor": "latest",
+		"as-table": "latest",
+		"authenticator": "latest",
+		"ccxt": "^1.10.807",
+		"express": "latest",
+		"html-tableify": "latest",
+		"ololog": "^1.1.84",
+		"promise-ratelimit": "latest",
+		"dotenv": "latest"
+	}
+}
