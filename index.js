@@ -1,6 +1,6 @@
 "use strict";
 
-const ccxt = require('ccxt'), log = require('ololog'), ansi = require('ansicolor').nice, repeat = 300000,
+const ccxt = require('ccxt'), log = require('ololog'), ansi = require('ansicolor').nice, repeat = 900000,
     tableify = require('html-tableify'), MOON=2;
 
 const markets = [
@@ -197,7 +197,7 @@ app.get('/', async (req, res) => {
 
 app.get('/start', async (req, res) => {
     require("dotenv").config();
-    if (true || authenticator.verifyToken(process.env["TOKEN"], req.query.token)
+    if (authenticator.verifyToken(process.env["TOKEN"], req.query.token)
     ) {
         for (let i = 0, len = markets.length; i < len; i++) {
             try {
