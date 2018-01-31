@@ -1,0 +1,1 @@
+FROM eymerich/traderbot:latest

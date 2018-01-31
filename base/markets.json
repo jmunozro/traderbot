@@ -1,0 +1,15 @@
+[
+    {"m": "EOS/BTC", "e": "hitbtc2"},
+    {"m": "MAID/BTC","e": "hitbtc2"},
+    {"m": "CMT/BTC", "e": "binance"},
+    {"m": "DGB/BTC", "e": "hitbtc2"},
+    {"m": "NEO/BTC", "e": "cryptopia"},
+    {"m": "WTC/BTC", "e": "hitbtc2"},
+    {"m": "CTR/BTC", "e": "binance"},
+    {"m": "ETN/BTC", "e": "cryptopia"},
+    {"m": "ETC/BTC", "e": "binance"},
+    {"m": "XVG/BTC", "e": "cryptopia"},
+    {"m": "NEO/BTC", "e": "binance"},
+    {"m": "CVC/BTC", "e": "poloniex"},
+    {"m": "ETH/BTC", "e": "binance"}
+]
