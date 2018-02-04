@@ -1,4 +1,5 @@
 [
+    {"m": "GNT/BTC", "e": "poloniex"},
     {"m": "EOS/BTC", "e": "hitbtc2"},
     {"m": "MAID/BTC","e": "hitbtc2"},
     {"m": "CMT/BTC", "e": "binance"},
