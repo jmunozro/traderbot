@@ -1,5 +1,6 @@
+export const MOON = 2;
+
 export async function checkbalance(exchange, symbol) {
-    //require("dotenv").config();
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     let balance = false;
@@ -17,7 +18,6 @@ export async function checkbalance(exchange, symbol) {
 }
 
 export async function cancelStopLoss(exchange, symbol) {
-    //require("dotenv").config();
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     if (READONLY || !exchange.apiKey || !exchange.secret) {
@@ -32,16 +32,13 @@ export async function cancelStopLoss(exchange, symbol) {
     }
 }
 
-export async function setNewStopLoss(exchange, tick) {
-    let pairs = await exchange.loadMarkets();
-    let min = exchange.markets[tick.symbol].limits.amount.min;
-    let precision = exchange.markets[tick.symbol].precision.price;
-
+export async function setNewStopLoss(exchange, tick, amount) {
     let cpy = {};
     cpy.id = tick.iteration + 0.1;
     cpy.t = 'hardsell';
     cpy.e = tick.exchange;
     cpy.m = tick.symbol;
+	cpy.amount = amount;
     cpy.a = tick.bid * 0.85;//safe 10% margin to avoid selling in dumps
     cpy.b = tick.bid * 0.95;
     RULES.push(cpy);
@@ -49,7 +46,6 @@ export async function setNewStopLoss(exchange, tick) {
 }
 
 export async function setNewMoon(exchange, tick) {
-    //require("dotenv").config();
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     if (READONLY || !exchange.apiKey || !exchange.secret) {
@@ -67,8 +63,7 @@ export async function setNewMoon(exchange, tick) {
     log(tick.exchange, tick.symbol, ' NEW MOON '.cyan, '@', price);
 }
 
-export async function marketSell(exchange, tick) {
-    //require("dotenv").config();
+export async function marketSell(exchange, tick, amount) {
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     if (READONLY || !exchange.apiKey || !exchange.secret) {
@@ -78,11 +73,13 @@ export async function marketSell(exchange, tick) {
 
     let pairs = await exchange.loadMarkets();
     let precision = exchange.markets[tick.symbol].precision;
+	let min = exchange.markets[tick.symbol].limits.amount.min;
     let _balance = await exchange.fetchBalance();
-    let amount = _balance[tick.symbol.split("/")[0]].free;
-    amount = Number(Math.round(amount + ('e' + precision.amount )) + ('e' + (-1 * precision.amount)));
+    let totalAmount = _balance[tick.symbol.split("/")[0]].free;
+	let tradeAmount = (totalAmount-amount>min)?amount:totalAmount;
+    tradeAmount = Number(Math.round(tradeAmount + ('e' + precision.amount )) + ('e' + (-1 * precision.amount)));
     let price = Number(Math.round(tick.bid * 0.98 + ('e' + precision.price )) + ('e' + (-1 * precision.price)));
-    await exchange.createLimitSellOrder(tick.symbol, amount, price);
-    log(tick.exchange, tick.symbol, ' Sold at market price '.cyan, '@', tick.bid);
+    await exchange.createLimitSellOrder(tick.symbol, tradeAmount, price);
+    log(tradeAmount, tick.exchange, tick.symbol, ' Sold at market price '.cyan, '@', price);
 
 }

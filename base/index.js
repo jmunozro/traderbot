@@ -1,9 +1,9 @@
 "use strict";
 
-import { checkbalance, cancelStopLoss, setNewStopLoss, setNewMoon, marketSell } from 'actions';
+import { checkbalance, cancelStopLoss, setNewStopLoss, setNewMoon, marketSell, MOON } from 'actions';
 
 const ccxt = require('ccxt'), log = require('ololog'), ansi = require('ansicolor').nice, repeat = 900000,
-    tableify = require('html-tableify'), MOON = 2;
+    tableify = require('html-tableify');
 
 const markets = require('./config/markets.json');
 
@@ -67,7 +67,7 @@ async function checkRules(exchange, tick) {
                 if (RULES[i].percent >= 1) {
                     log(tick.exchange, tick.symbol, 'HARD SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
                     await cancelStopLoss(exchange, tick.symbol);
-                    await marketSell(exchange, tick);
+                    await marketSell(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
                 }
             }
             else if (RULES[i].t === 'moon') {
@@ -76,7 +76,7 @@ async function checkRules(exchange, tick) {
                 if (RULES[i].percent >= 1) {
                     log(tick.exchange, tick.symbol, 'MOON SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
                     await cancelStopLoss(exchange, tick.symbol);
-                    await marketSell(exchange, tick);
+                    await marketSell(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
                 }
             }
             else if (RULES[i].t === 'sell') {
@@ -88,7 +88,7 @@ async function checkRules(exchange, tick) {
                     log(tick.exchange, tick.symbol, 'NEW SELL RULE '.green, '@', RULES[i].a);
                     await cancelStopLoss(exchange, tick.symbol);
                     await setNewMoon(exchange, tick);
-                    await setNewStopLoss(exchange, tick); //set new stop loss at tick.bid - 5%
+                    await setNewStopLoss(exchange, tick, RULES[i].amount?RULES[i].amount:999999); //set new stop loss at tick.bid - 5%
                 }
             }
             /*else if (RULES[i].t === 'buy') {
