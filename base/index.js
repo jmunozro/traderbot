@@ -1,5 +1,7 @@
 "use strict";
 
+import { checkbalance, cancelStopLoss, setNewStopLoss, setNewMoon, marketSell } from 'actions';
+
 const ccxt = require('ccxt'), log = require('ololog'), ansi = require('ansicolor').nice, repeat = 900000,
     tableify = require('html-tableify'), MOON = 2;
 
@@ -54,95 +56,6 @@ async function getTicker(symbol, exchange) {
             log("Error getTicker ", exchange.id, " for ", symbol, ": ", err);
         }
     }
-}
-
-async function checkbalance(exchange, symbol) {
-    //require("dotenv").config();
-    exchange.apiKey = process.env["APIKEY_" + exchange.id];
-    exchange.secret = process.env["APISECRET_" + exchange.id];
-    let balance = false;
-    if (READONLY || !exchange.apiKey || !exchange.secret) {
-        return true;//this exchange is for information only
-    }
-    try {
-        let _balance = await exchange.fetchBalance();
-        balance = _balance[symbol.split("/")[0]].total > 0;
-    } catch (err) {
-        balance = true; //maybe next time it will be better
-        log("Error checking balance at ", exchange.id, " for ", symbol, ": ", err);
-    }
-    return balance;
-}
-
-async function cancelStopLoss(exchange, symbol) {
-    //require("dotenv").config();
-    exchange.apiKey = process.env["APIKEY_" + exchange.id];
-    exchange.secret = process.env["APISECRET_" + exchange.id];
-    if (READONLY || !exchange.apiKey || !exchange.secret) {
-        log("READONLY: ", "Cancelled all orders for: ", symbol, " @ ", exchange.id);
-        return;
-    }
-
-    let orders = await exchange.fetchOpenOrders(symbol);
-    for (let i = 0; i < orders.length; i++) {
-        await exchange.cancelOrder(orders[i].id);
-        log("Cancelled order: ", orders[i].symbol, " @ ", orders[i].price);
-    }
-}
-
-async function setNewStopLoss(exchange, tick) {
-    let pairs = await exchange.loadMarkets();
-    let min = exchange.markets[tick.symbol].limits.amount.min;
-    let precision = exchange.markets[tick.symbol].precision.price;
-
-    let cpy = {};
-    cpy.id = tick.iteration + 0.1;
-    cpy.t = 'hardsell';
-    cpy.e = tick.exchange;
-    cpy.m = tick.symbol;
-    cpy.a = tick.bid * 0.85;//safe 10% margin to avoid selling in dumps
-    cpy.b = tick.bid * 0.95;
-    RULES.push(cpy);
-    log(cpy.id, tick.exchange, tick.symbol, 'NEW HARDSELL RULE '.magenta, '@', cpy.b);
-}
-
-async function setNewMoon(exchange, tick) {
-    //require("dotenv").config();
-    exchange.apiKey = process.env["APIKEY_" + exchange.id];
-    exchange.secret = process.env["APISECRET_" + exchange.id];
-    if (READONLY || !exchange.apiKey || !exchange.secret) {
-        log("READONLY: ", "New moon: ", tick.symbol, " @ ", exchange.id);
-        return;
-    }
-
-    let pairs = await exchange.loadMarkets();
-    let precision = exchange.markets[tick.symbol].precision;
-    let _balance = await exchange.fetchBalance();
-    let amount = _balance[tick.symbol.split("/")[0]].free;
-    amount = Number(Math.round(amount + ('e' + precision.amount )) + ('e' + (-1 * precision.amount)));
-    let price = Number(Math.round(tick.bid * MOON + ('e' + precision.price )) + ('e' + (-1 * precision.price)));
-    await exchange.createLimitSellOrder(tick.symbol, amount, price);
-    log(tick.exchange, tick.symbol, ' NEW MOON '.cyan, '@', price);
-}
-
-async function marketSell(exchange, tick) {
-    //require("dotenv").config();
-    exchange.apiKey = process.env["APIKEY_" + exchange.id];
-    exchange.secret = process.env["APISECRET_" + exchange.id];
-    if (READONLY || !exchange.apiKey || !exchange.secret) {
-        log("READONLY: ", "MarketSell: ", tick.symbol, " @ ", exchange.id);
-        return;
-    }
-
-    let pairs = await exchange.loadMarkets();
-    let precision = exchange.markets[tick.symbol].precision;
-    let _balance = await exchange.fetchBalance();
-    let amount = _balance[tick.symbol.split("/")[0]].free;
-    amount = Number(Math.round(amount + ('e' + precision.amount )) + ('e' + (-1 * precision.amount)));
-    let price = Number(Math.round(tick.bid * 0.98 + ('e' + precision.price )) + ('e' + (-1 * precision.price)));
-    await exchange.createLimitSellOrder(tick.symbol, amount, price);
-    log(tick.exchange, tick.symbol, ' Sold at market price '.cyan, '@', tick.bid);
-
 }
 
 async function checkRules(exchange, tick) {
@@ -214,7 +127,7 @@ app.get('/start', async (req, res) => {
     require("dotenv").config();
     let token = process.env["TOKEN"];
     if (!token || !req.query.token) {
-        return res.send('Couldnt get token: ' + token + '#' + req.query.token)
+        return res.send('Couldnt get token: #' + req.query.token)
     }
     if (authenticator.verifyToken(token, req.query.token)) {
         READONLY = false;
@@ -228,7 +141,7 @@ app.get('/stop', async (req, res) => {
     //require("dotenv").config();
     let token = process.env["TOKEN"];
     if (!token || !req.query.token) {
-        return res.send('Couldnt get token: ' + token + '#' + req.query.token)
+        return res.send('Couldnt get token: #' + req.query.token)
     }
     if (authenticator.verifyToken(token, req.query.token)
     ) {
