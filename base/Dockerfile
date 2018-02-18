@@ -2,8 +2,8 @@ FROM node:9
 
 WORKDIR /home/node/app
 
-ADD index.js /home/node/app
-ADD package.json /home/node/app
+ADD *.js /home/node/app
+ADD *.json /home/node/app
 
 RUN npm install
 
