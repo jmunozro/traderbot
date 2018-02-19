@@ -1,6 +1,6 @@
 "use strict";
 
-import { checkbalance, cancelStopLoss, setNewStopLoss, setNewMoon, marketSell, MOON } from 'actions';
+const actions = require('./actions.js');
 
 const ccxt = require('ccxt'), log = require('ololog'), ansi = require('ansicolor').nice, repeat = 900000,
     tableify = require('html-tableify');
@@ -10,14 +10,14 @@ const markets = require('./config/markets.json');
 let RULES = require('./config/rules.json');
 
 let express = require('express'), app = express(), throttle = require('promise-ratelimit')(4000), tickers = [],
-    asTable = require('as-table'), authenticator = require('authenticator'), READONLY = true, RUNNING = false;
+    asTable = require('as-table'), authenticator = require('authenticator'), RUNNING = false;
 
 async function getTicker(symbol, exchange) {
     for (let i = 1; i < repeat; i++) {
         try {
             await throttle();
             if (i % 13 === 0) {
-                let hasBalance = await checkbalance(exchange, symbol);
+                let hasBalance = await actions.checkBalance(exchange, symbol);
                 if (!hasBalance) {
                     log("No more ", symbol, " in ", exchange.id);
                     return;//no more money!
@@ -66,8 +66,8 @@ async function checkRules(exchange, tick) {
                 RULES[i].price = tick.bid;
                 if (RULES[i].percent >= 1) {
                     log(tick.exchange, tick.symbol, 'HARD SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
-                    await cancelStopLoss(exchange, tick.symbol);
-                    await marketSell(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
+                    await actions.cancelStopLoss(exchange, tick.symbol);
+                    await actions.marketSell(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
                 }
             }
             else if (RULES[i].t === 'moon') {
@@ -75,8 +75,8 @@ async function checkRules(exchange, tick) {
                 RULES[i].price = tick.bid;
                 if (RULES[i].percent >= 1) {
                     log(tick.exchange, tick.symbol, 'MOON SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
-                    await cancelStopLoss(exchange, tick.symbol);
-                    await marketSell(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
+                    await actions.cancelStopLoss(exchange, tick.symbol);
+                    await actions.marketSell(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
                 }
             }
             else if (RULES[i].t === 'sell') {
@@ -86,9 +86,9 @@ async function checkRules(exchange, tick) {
                     log(tick.exchange, tick.symbol, 'SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
                     RULES[i].a = tick.bid * 1.05;
                     log(tick.exchange, tick.symbol, 'NEW SELL RULE '.green, '@', RULES[i].a);
-                    await cancelStopLoss(exchange, tick.symbol);
-                    await setNewMoon(exchange, tick);
-                    await setNewStopLoss(exchange, tick, RULES[i].amount?RULES[i].amount:999999); //set new stop loss at tick.bid - 5%
+                    await actions.cancelStopLoss(exchange, tick.symbol);
+                    await actions.setNewMoon(exchange, tick);
+                    await actions.setNewStopLoss(exchange, tick, RULES[i].amount?RULES[i].amount:999999); //set new stop loss at tick.bid - 5%
                 }
             }
             /*else if (RULES[i].t === 'buy') {
@@ -130,7 +130,7 @@ app.get('/start', async (req, res) => {
         return res.send('Couldnt get token: #' + req.query.token)
     }
     if (authenticator.verifyToken(token, req.query.token)) {
-        READONLY = false;
+        actions.READONLY = false;
     } else {
         return res.send('invalid token')
     }

@@ -1,6 +1,9 @@
-export const MOON = 2;
+const log = require('ololog');
 
-export async function checkbalance(exchange, symbol) {
+const MOON = 2;
+let READONLY = true;
+
+async function checkBalance(exchange, symbol) {
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     let balance = false;
@@ -17,7 +20,7 @@ export async function checkbalance(exchange, symbol) {
     return balance;
 }
 
-export async function cancelStopLoss(exchange, symbol) {
+async function cancelStopLoss(exchange, symbol) {
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     if (READONLY || !exchange.apiKey || !exchange.secret) {
@@ -32,7 +35,7 @@ export async function cancelStopLoss(exchange, symbol) {
     }
 }
 
-export async function setNewStopLoss(exchange, tick, amount) {
+async function setNewStopLoss(exchange, tick, amount) {
     let cpy = {};
     cpy.id = tick.iteration + 0.1;
     cpy.t = 'hardsell';
@@ -45,7 +48,7 @@ export async function setNewStopLoss(exchange, tick, amount) {
     log(cpy.id, tick.exchange, tick.symbol, 'NEW HARDSELL RULE '.magenta, '@', cpy.b);
 }
 
-export async function setNewMoon(exchange, tick) {
+async function setNewMoon(exchange, tick) {
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     if (READONLY || !exchange.apiKey || !exchange.secret) {
@@ -63,11 +66,11 @@ export async function setNewMoon(exchange, tick) {
     log(tick.exchange, tick.symbol, ' NEW MOON '.cyan, '@', price);
 }
 
-export async function marketSell(exchange, tick, amount) {
+async function marketSell(exchange, tick, amount) {
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     if (READONLY || !exchange.apiKey || !exchange.secret) {
-        log("READONLY: ", "MarketSell: ", tick.symbol, " @ ", exchange.id);
+        log("READONLY: ", "MarketSell: ", amount, tick.symbol, " @ ", exchange.id);
         return;
     }
 
@@ -81,5 +84,12 @@ export async function marketSell(exchange, tick, amount) {
     let price = Number(Math.round(tick.bid * 0.98 + ('e' + precision.price )) + ('e' + (-1 * precision.price)));
     await exchange.createLimitSellOrder(tick.symbol, tradeAmount, price);
     log(tradeAmount, tick.exchange, tick.symbol, ' Sold at market price '.cyan, '@', price);
-
 }
+
+module.exports = {
+    checkbalance: checkBalance,
+    cancelStopLoss: cancelStopLoss,
+    setNewStopLoss: setNewStopLoss,
+    setNewMoon: setNewMoon,
+    marketSell: marketSell,
+};
