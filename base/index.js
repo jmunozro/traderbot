@@ -9,7 +9,7 @@ const markets = require('./config/markets.json');
 
 let RULES = require('./config/rules.json');
 
-let express = require('express'), app = express(), throttle = require('promise-ratelimit')(4000), tickers = [],
+let express = require('express'), app = express(), throttle = require('promise-ratelimit')(3000), tickers = [],
     asTable = require('as-table'), authenticator = require('authenticator'), RUNNING = false;
 
 async function getTicker(symbol, exchange) {
@@ -87,8 +87,9 @@ async function checkRules(exchange, tick) {
                     RULES[i].a = tick.bid * 1.05;
                     log(tick.exchange, tick.symbol, 'NEW SELL RULE '.green, '@', RULES[i].a);
                     await actions.cancelStopLoss(exchange, tick.symbol);
-                    await actions.setNewMoon(exchange, tick);
-                    await actions.setNewStopLoss(exchange, tick, RULES[i].amount?RULES[i].amount:999999); //set new stop loss at tick.bid - 5%
+                    await actions.setNewMoon(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
+                    let newRule = await actions.setNewStopLoss(exchange, tick, RULES[i].amount?RULES[i].amount:999999); //set new stop loss at tick.bid - 5%
+                    RULES.push(newRule);
                 }
             }
             /*else if (RULES[i].t === 'buy') {
@@ -131,8 +132,9 @@ app.get('/start', async (req, res) => {
     }
     if (authenticator.verifyToken(token, req.query.token)) {
         actions.READONLY = false;
+        return res.redirect('/ticker');
     } else {
-        return res.send('invalid token')
+        return res.send('invalid token');
     }
 })
 ;
