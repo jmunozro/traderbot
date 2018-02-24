@@ -44,11 +44,12 @@ async function setNewStopLoss(exchange, tick, amount) {
 	cpy.amount = amount;
     cpy.a = tick.bid * 0.85;//safe 10% margin to avoid selling in dumps
     cpy.b = tick.bid * 0.95;
-    RULES.push(cpy);
+    //RULES.push(cpy);
     log(cpy.id, tick.exchange, tick.symbol, 'NEW HARDSELL RULE '.magenta, '@', cpy.b);
+    return cpy;
 }
 
-async function setNewMoon(exchange, tick) {
+async function setNewMoon(exchange, tick, amount) {
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     if (READONLY || !exchange.apiKey || !exchange.secret) {
@@ -87,7 +88,7 @@ async function marketSell(exchange, tick, amount) {
 }
 
 module.exports = {
-    checkbalance: checkBalance,
+    checkBalance: checkBalance,
     cancelStopLoss: cancelStopLoss,
     setNewStopLoss: setNewStopLoss,
     setNewMoon: setNewMoon,
