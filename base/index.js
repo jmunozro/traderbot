@@ -132,7 +132,7 @@ app.get('/start', async (req, res) => {
     }
     if (authenticator.verifyToken(token, req.query.token)) {
         actions.READONLY = false;
-        return res.redirect('/ticker');
+        return res.redirect('/');
     } else {
         return res.send('invalid token');
     }
@@ -155,7 +155,7 @@ app.get('/stop', async (req, res) => {
 
 app.get('/ticker', async (req, res) => {
     //res.send(asTable(tickers))
-    res.send(tableify(tickers, {
+    res.send((actions.READONLY?'READONLY MODE':'PRODUCTION MODE') + tableify(tickers, {
         tidy: false
     }) + tableify(RULES, {
         tidy: false

@@ -60,10 +60,11 @@ async function setNewMoon(exchange, tick, amount) {
     let pairs = await exchange.loadMarkets();
     let precision = exchange.markets[tick.symbol].precision;
     let _balance = await exchange.fetchBalance();
-    let amount = _balance[tick.symbol.split("/")[0]].free;
-    amount = Number(Math.round(amount + ('e' + precision.amount )) + ('e' + (-1 * precision.amount)));
+    let totalAmount = _balance[tick.symbol.split("/")[0]].free;
+    let tradeAmount = (totalAmount-amount>min)?amount:totalAmount;
+    tradeAmount = Number(Math.round(tradeAmount + ('e' + precision.amount )) + ('e' + (-1 * precision.amount)));
     let price = Number(Math.round(tick.bid * MOON + ('e' + precision.price )) + ('e' + (-1 * precision.price)));
-    await exchange.createLimitSellOrder(tick.symbol, amount, price);
+    await exchange.createLimitSellOrder(tick.symbol, tradeAmount, price);
     log(tick.exchange, tick.symbol, ' NEW MOON '.cyan, '@', price);
 }
 
@@ -93,4 +94,5 @@ module.exports = {
     setNewStopLoss: setNewStopLoss,
     setNewMoon: setNewMoon,
     marketSell: marketSell,
+    READONLY:READONLY,
 };
