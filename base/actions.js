@@ -3,6 +3,10 @@ const log = require('ololog');
 const MOON = 2;
 let READONLY = true;
 
+function setProduction(){
+    READONLY=false;
+}
+
 async function checkBalance(exchange, symbol) {
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
@@ -24,6 +28,7 @@ async function cancelStopLoss(exchange, symbol) {
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     if (READONLY || !exchange.apiKey || !exchange.secret) {
+        log("READONLY: ", READONLY);
         log("READONLY: ", "Cancelled all orders for: ", symbol, " @ ", exchange.id);
         return;
     }
@@ -53,6 +58,7 @@ async function setNewMoon(exchange, tick, amount) {
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     if (READONLY || !exchange.apiKey || !exchange.secret) {
+        log("READONLY: ", READONLY);
         log("READONLY: ", "New moon: ", tick.symbol, " @ ", exchange.id);
         return;
     }
@@ -72,6 +78,7 @@ async function marketSell(exchange, tick, amount) {
     exchange.apiKey = process.env["APIKEY_" + exchange.id];
     exchange.secret = process.env["APISECRET_" + exchange.id];
     if (READONLY || !exchange.apiKey || !exchange.secret) {
+        log("READONLY: ", READONLY);
         log("READONLY: ", "MarketSell: ", amount, tick.symbol, " @ ", exchange.id);
         return;
     }
@@ -95,4 +102,5 @@ module.exports = {
     setNewMoon: setNewMoon,
     marketSell: marketSell,
     READONLY:READONLY,
+    setProduction: setProduction,
 };

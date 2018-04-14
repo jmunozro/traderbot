@@ -131,7 +131,8 @@ app.get('/start', async (req, res) => {
         return res.send('Couldnt get token: #' + req.query.token)
     }
     if (authenticator.verifyToken(token, req.query.token)) {
-        actions.READONLY = false;
+        actions.setProduction();
+        log("Production mode activated");
         return res.redirect('/');
     } else {
         return res.send('invalid token');
