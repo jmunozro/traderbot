@@ -1,10 +1,14 @@
 const log = require('ololog');
 
 const MOON = 2;
-let READONLY = true;
+let READONLY = false;
 
 function setProduction(){
     READONLY=false;
+}
+
+function getReadOnly(){
+    return READONLY;
 }
 
 async function checkBalance(exchange, symbol) {
@@ -65,6 +69,7 @@ async function setNewMoon(exchange, tick, amount) {
 
     let pairs = await exchange.loadMarkets();
     let precision = exchange.markets[tick.symbol].precision;
+    let min = exchange.markets[tick.symbol].limits.amount.min;
     let _balance = await exchange.fetchBalance();
     let totalAmount = _balance[tick.symbol.split("/")[0]].free;
     let tradeAmount = (totalAmount-amount>min)?amount:totalAmount;
@@ -101,6 +106,6 @@ module.exports = {
     setNewStopLoss: setNewStopLoss,
     setNewMoon: setNewMoon,
     marketSell: marketSell,
-    READONLY:READONLY,
     setProduction: setProduction,
+    getReadOnly:getReadOnly,
 };

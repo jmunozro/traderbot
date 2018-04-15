@@ -128,7 +128,9 @@ app.get('/start', async (req, res) => {
     require("dotenv").config();
     let token = process.env["TOKEN"];
     if (!token || !req.query.token) {
-        return res.send('Couldnt get token: #' + req.query.token)
+        actions.setProduction();//quick start
+        return res.redirect('/');
+        //return res.send('Couldnt get token: #' + req.query.token)
     }
     if (authenticator.verifyToken(token, req.query.token)) {
         actions.setProduction();
@@ -156,7 +158,7 @@ app.get('/stop', async (req, res) => {
 
 app.get('/ticker', async (req, res) => {
     //res.send(asTable(tickers))
-    res.send((actions.READONLY?'READONLY MODE':'PRODUCTION MODE') + tableify(tickers, {
+    res.send((actions.getReadOnly()?'READONLY MODE':'PRODUCTION MODE') + tableify(tickers, {
         tidy: false
     }) + tableify(RULES, {
         tidy: false
