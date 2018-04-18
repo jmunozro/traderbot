@@ -9,7 +9,7 @@ const markets = require('./config/markets.json');
 
 let RULES = require('./config/rules.json');
 
-let express = require('express'), app = express(), throttle = require('promise-ratelimit')(3000), tickers = [],
+let express = require('express'), app = express(), throttle = require('promise-ratelimit')(4000), tickers = [],
     asTable = require('as-table'), authenticator = require('authenticator'), RUNNING = false;
 
 async function getTicker(symbol, exchange) {
@@ -53,7 +53,7 @@ async function getTicker(symbol, exchange) {
                 return b.percent - a.percent;
             });
         } catch (err) {
-            log("Error getTicker ", exchange.id, " for ", symbol, ": ", err);
+            //log("Error getTicker ", exchange.id, " for ", symbol, ": ", err);
         }
     }
 }
@@ -87,9 +87,9 @@ async function checkRules(exchange, tick) {
                     RULES[i].a = tick.bid * 1.05;
                     log(tick.exchange, tick.symbol, 'NEW SELL RULE '.green, '@', RULES[i].a);
                     await actions.cancelStopLoss(exchange, tick.symbol);
-                    await actions.setNewMoon(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
                     let newRule = await actions.setNewStopLoss(exchange, tick, RULES[i].amount?RULES[i].amount:999999); //set new stop loss at tick.bid - 5%
                     RULES.push(newRule);
+                    await actions.setNewMoon(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
                 }
             }
             /*else if (RULES[i].t === 'buy') {
