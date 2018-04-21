@@ -23,7 +23,7 @@ async function checkBalance(exchange, symbol) {
         balance = _balance[symbol.split("/")[0]].total > 0;
     } catch (err) {
         balance = true; //maybe next time it will be better
-        log("Error checking balance at ", exchange.id, " for ", symbol, ": ", err);
+        //log("Error checking balance at ", exchange.id, " for ", symbol, ": ", err);
     }
     return balance;
 }

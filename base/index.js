@@ -68,6 +68,7 @@ async function checkRules(exchange, tick) {
                     log(tick.exchange, tick.symbol, 'HARD SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
                     await actions.cancelStopLoss(exchange, tick.symbol);
                     await actions.marketSell(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
+                    RULES.splice(i, 1);
                 }
             }
             else if (RULES[i].t === 'moon') {
@@ -77,6 +78,7 @@ async function checkRules(exchange, tick) {
                     log(tick.exchange, tick.symbol, 'MOON SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
                     await actions.cancelStopLoss(exchange, tick.symbol);
                     await actions.marketSell(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
+                    RULES.splice(i, 1);
                 }
             }
             else if (RULES[i].t === 'sell') {
@@ -90,6 +92,7 @@ async function checkRules(exchange, tick) {
                     let newRule = await actions.setNewStopLoss(exchange, tick, RULES[i].amount?RULES[i].amount:999999); //set new stop loss at tick.bid - 5%
                     RULES.push(newRule);
                     await actions.setNewMoon(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
+                    RULES.splice(i, 1);
                 }
             }
             /*else if (RULES[i].t === 'buy') {
