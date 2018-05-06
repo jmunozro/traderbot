@@ -61,52 +61,57 @@ async function getTicker(symbol, exchange) {
 async function checkRules(exchange, tick) {
     for (let i = 0, len = RULES.length; i < len; i++) {
         if (tick.exchange === RULES[i].e && tick.symbol === RULES[i].m) {
-            if (RULES[i].t === 'hardsell') {
-                RULES[i].percent = RULES[i].b / tick.bid;
-                RULES[i].price = tick.bid;
-                if (RULES[i].percent >= 1) {
-                    log(tick.exchange, tick.symbol, 'HARD SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
-                    await actions.cancelStopLoss(exchange, tick.symbol);
-                    await actions.marketSell(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
-                    RULES.splice(i, 1);
+            try {
+                if (RULES[i].t === 'hardsell') {
+                    RULES[i].percent = RULES[i].b / tick.bid;
+                    RULES[i].price = tick.bid;
+                    if (RULES[i].percent >= 1) {
+                        log(tick.exchange, tick.symbol, 'HARD SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
+                        await actions.cancelStopLoss(exchange, tick.symbol);
+                        await actions.marketSell(exchange, tick, RULES[i].amount ? RULES[i].amount : 999999);
+                        RULES.splice(i, 1);
+                    }
                 }
+                else if (RULES[i].t === 'moon') {
+                    RULES[i].percent = tick.bid / RULES[i].a;
+                    RULES[i].price = tick.bid;
+                    if (RULES[i].percent >= 1) {
+                        log(tick.exchange, tick.symbol, 'MOON SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
+                        await actions.cancelStopLoss(exchange, tick.symbol);
+                        await actions.marketSell(exchange, tick, RULES[i].amount ? RULES[i].amount : 999999);
+                        RULES.splice(i, 1);
+                    }
+                }
+                else if (RULES[i].t === 'sell') {
+                    RULES[i].percent = tick.bid / RULES[i].a;
+                    RULES[i].price = tick.bid;
+                    if (RULES[i].percent >= 1) {
+                        log(tick.exchange, tick.symbol, 'SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
+                        RULES[i].a = tick.bid * 1.05;
+                        log(tick.exchange, tick.symbol, 'NEW SELL RULE '.green, '@', RULES[i].a);
+                        let newRule = await actions.setNewStopLoss(exchange, tick, RULES[i].amount ? RULES[i].amount : 999999); //set new stop loss at tick.bid - 5%
+                        RULES.push(newRule);
+                        await actions.cancelStopLoss(exchange, tick.symbol);
+                        await actions.setNewMoon(exchange, tick, RULES[i].amount ? RULES[i].amount : 999999);
+                        RULES.splice(i, 1);
+                    }
+                }
+                /*else if (RULES[i].t === 'buy') {
+                    RULES[i].percent = RULES[i].b / tick.ask;
+                    RULES[i].price = tick.ask;
+                    if (RULES[i].percent >= 1) {
+                        log(tick.exchange, tick.symbol, 'BUY RULE MATCHED!!'.red, '@', tick.ask, "(", RULES[i].a, ",", RULES[i].b, ")");
+                        RULES[i].b = tick.ask * 0.95;
+                        log(tick.exchange, tick.symbol, 'NEW BUY RULE '.green, '@', RULES[i].b);
+                        await cancelStopLoss(exchange, tick.symbol);
+                        await setNewFloor(exchange, tick);
+                        await setNewHardBuy(exchange, tick, i);
+                    }
+                }*/
             }
-            else if (RULES[i].t === 'moon') {
-                RULES[i].percent = tick.bid / RULES[i].a;
-                RULES[i].price = tick.bid;
-                if (RULES[i].percent >= 1) {
-                    log(tick.exchange, tick.symbol, 'MOON SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
-                    await actions.cancelStopLoss(exchange, tick.symbol);
-                    await actions.marketSell(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
-                    RULES.splice(i, 1);
-                }
+            catch (err) {
+                log("Error checkRules ", tick.exchange, " for ", tick.symbol, ": ", err);
             }
-            else if (RULES[i].t === 'sell') {
-                RULES[i].percent = tick.bid / RULES[i].a;
-                RULES[i].price = tick.bid;
-                if (RULES[i].percent >= 1) {
-                    log(tick.exchange, tick.symbol, 'SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
-                    RULES[i].a = tick.bid * 1.05;
-                    log(tick.exchange, tick.symbol, 'NEW SELL RULE '.green, '@', RULES[i].a);
-                    await actions.cancelStopLoss(exchange, tick.symbol);
-                    let newRule = await actions.setNewStopLoss(exchange, tick, RULES[i].amount?RULES[i].amount:999999); //set new stop loss at tick.bid - 5%
-                    RULES.push(newRule);
-                    await actions.setNewMoon(exchange, tick, RULES[i].amount?RULES[i].amount:999999);
-                    RULES.splice(i, 1);
-                }
-            }
-            /*else if (RULES[i].t === 'buy') {
-                RULES[i].percent = RULES[i].b / tick.ask;
-                RULES[i].price = tick.ask;
-                if (RULES[i].percent >= 1) {
-                    log(tick.exchange, tick.symbol, 'BUY RULE MATCHED!!'.red, '@', tick.ask, "(", RULES[i].a, ",", RULES[i].b, ")");
-                    RULES[i].b = tick.ask * 0.95;
-                    log(tick.exchange, tick.symbol, 'NEW BUY RULE '.green, '@', RULES[i].b);
-                    await cancelStopLoss(exchange, tick.symbol);
-                    await setNewFloor(exchange, tick);
-                    await setNewHardBuy(exchange, tick, i);
-                }
-            }*/
         }
     }
 }
