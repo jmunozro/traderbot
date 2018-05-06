@@ -39,7 +39,7 @@ async function cancelStopLoss(exchange, symbol) {
 
     let orders = await exchange.fetchOpenOrders(symbol);
     for (let i = 0; i < orders.length; i++) {
-        await exchange.cancelOrder(orders[i].id);
+        await exchange.cancelOrder(orders[i].id, orders[i].symbol);
         log("Cancelled order: ", orders[i].symbol, " @ ", orders[i].price);
     }
 }
