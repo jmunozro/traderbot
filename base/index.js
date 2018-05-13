@@ -66,7 +66,7 @@ async function checkRules(exchange, tick) {
                     RULES[i].percent = RULES[i].b / tick.bid;
                     RULES[i].price = tick.bid;
                     if (RULES[i].percent >= 1) {
-                        log(tick.exchange, tick.symbol, 'HARD SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
+                        log(tick.datetime, tick.exchange, tick.symbol, 'HARD SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
                         await actions.cancelStopLoss(exchange, tick.symbol);
                         await actions.marketSell(exchange, tick, RULES[i].amount ? RULES[i].amount : 999999);
                         RULES.splice(i, 1);
@@ -76,7 +76,7 @@ async function checkRules(exchange, tick) {
                     RULES[i].percent = tick.bid / RULES[i].a;
                     RULES[i].price = tick.bid;
                     if (RULES[i].percent >= 1) {
-                        log(tick.exchange, tick.symbol, 'MOON SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
+                        log(tick.datetime, tick.exchange, tick.symbol, 'MOON SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
                         await actions.cancelStopLoss(exchange, tick.symbol);
                         await actions.marketSell(exchange, tick, RULES[i].amount ? RULES[i].amount : 999999);
                         RULES.splice(i, 1);
@@ -86,14 +86,13 @@ async function checkRules(exchange, tick) {
                     RULES[i].percent = tick.bid / RULES[i].a;
                     RULES[i].price = tick.bid;
                     if (RULES[i].percent >= 1) {
-                        log(tick.exchange, tick.symbol, 'SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
+                        log(tick.datetime, tick.exchange, tick.symbol, 'SELL RULE MATCHED!!'.red, '@', tick.bid, "(", RULES[i].a, ",", RULES[i].b, ")");
                         RULES[i].a = tick.bid * 1.05;
-                        log(tick.exchange, tick.symbol, 'NEW SELL RULE '.green, '@', RULES[i].a);
+                        log(tick.datetime, tick.exchange, tick.symbol, 'NEW SELL RULE '.green, '@', RULES[i].a);
                         let newRule = await actions.setNewStopLoss(exchange, tick, RULES[i].amount ? RULES[i].amount : 999999); //set new stop loss at tick.bid - 5%
                         RULES.push(newRule);
                         await actions.cancelStopLoss(exchange, tick.symbol);
                         await actions.setNewMoon(exchange, tick, RULES[i].amount ? RULES[i].amount : 999999);
-                        RULES.splice(i, 1);
                     }
                 }
                 /*else if (RULES[i].t === 'buy') {
@@ -110,7 +109,7 @@ async function checkRules(exchange, tick) {
                 }*/
             }
             catch (err) {
-                log("Error checkRules ", tick.exchange, " for ", tick.symbol, ": ", err);
+                log(tick.datetime, "Error checkRules ", tick.exchange, " for ", tick.symbol, ": ", err);
             }
         }
     }
